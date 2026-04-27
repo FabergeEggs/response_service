@@ -1,15 +1,25 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from uuid import UUID, uuid4
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+class ResponseStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
 
 class Response(BaseModel):
-    id: Optional[int] = None
-    task_id: int
-    user_id: int
-    content: str
-    status: str = "pending"
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    id: UUID = Field(default_factory=uuid4)
+    task_id: UUID
+    user_id: UUID
+    text: str
+    status: ResponseStatus = ResponseStatus.PENDING
+    attached_files: List[UUID] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class ResponseStatusUpdate(BaseModel):
-    status: str
+    class Config:
+        use_enum_values = True
+        json_encoders = {UUID: str, datetime: lambda v: v.isoformat()}
