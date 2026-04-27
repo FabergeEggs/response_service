@@ -1,13 +1,21 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List
+from app.schemas.response import Response, ResponseUpdate, ResponseStatusUpdate
+from app.schemas.comment import Comment, CommentCreate
 
-app = FastAPI()
+router = APIRouter()
 
+@router.get("/{id}")
+async def get_response(id: int):
+    """Получение отклика по ID"""
+    return {"id": id, "message": "Get response"}
 
-@app.get("/auth/")
-def who_i_am():
-    return {"message": "I am response service!"}
+@router.put("/{id}")
+async def update_response(id: int, response: ResponseUpdate):
+    """Обновление отклика"""
+    return {"id": id, "updated": True}
 
-@app.get("/health")
-async def health_check():
-    return JSONResponse({"status": "healthy"})
+@router.put("/{id}/status")
+async def update_response_status(id: int, status_update: ResponseStatusUpdate):
+    """Обновление статуса отклика"""
+    return {"id": id, "status": status_update.status}

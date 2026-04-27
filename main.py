@@ -1,10 +1,26 @@
-from src.api.handlers import app
-import uvicorn
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from src.api.handlers import router
+from src.core.config import settings
+from src.core.lifespan import lifespan
 
+app = FastAPI(
+    title="Response Service",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
-def main():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+app.include_router(router, prefix="/response", tags=["responses"])
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=True
+    )
