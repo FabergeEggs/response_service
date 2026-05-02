@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.135.1",
+    "psycopg-pool>=3.3.1",
+    "psycopg2-binary>=2.9.12",
+    "yoyo-migrations>=9.0.0",
 ]
