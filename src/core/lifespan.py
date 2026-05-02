@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import asyncio
 import logging
 from src.services.kafka_consumer import KafkaConsumerService
-from src.services.kafka_producer import KafkaProducerService
+from a.services.kafka_producer import KafkaProducerService
 from src.services.media_client import MediaServiceClient
 from src.repositories.in_memory_repositories import InMemoryResponseRepository, InMemoryCommentRepository
 from src.services.response_service import ResponseService
