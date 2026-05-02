@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import Response as FastAPIResponse  
+from fastapi.responses import Response as FastAPIResponse
 from uuid import UUID
 from typing import List
 from src.api.dto import (

@@ -19,4 +19,4 @@ class ChangeStatusRequest(BaseModel):
 
 class CreateCommentRequest(BaseModel):
     user_id: UUID
-    text: str           
+    text: str

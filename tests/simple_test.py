@@ -8,7 +8,7 @@ def test_math_operations():
 
 def test_string_operations():
     text = "Hello, World!"
-    
+
     assert len(text) == 13
     assert text.startswith("Hello")
     assert text.endswith("World!")

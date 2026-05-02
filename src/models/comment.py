@@ -10,5 +10,3 @@ class Comment(BaseModel):
     content: str
     created_at: Optional[datetime] = datetime.now()
     updated_at: Optional[datetime] = datetime.now()
-
-
