@@ -2,14 +2,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import asyncio
 import logging
+from src.repositories.in_memory_repositories import (
+    InMemoryResponseRepository,
+    InMemoryCommentRepository  # ← добавить этот
+)
 from src.services.kafka_consumer import KafkaConsumerService
 from src.services.kafka_producer import KafkaProducerService
 from src.services.media_client import MediaServiceClient
-from src.repositories.in_memory_repositories import InMemoryResponseRepository, InMemoryCommentRepository
 from src.services.response_service import ResponseService
 from src.services.comment_service import CommentService
-from src.core.logging import setup_logging
-
 # Глобальные экземпляры (можно также хранить в app.state)
 kafka_consumer = KafkaConsumerService()
 kafka_producer = KafkaProducerService()
