@@ -126,3 +126,49 @@ class KafkaProducerService:
         await self._publish_answer_event(
             "answer.deleted", response_id, task_id
         )
+
+    async def _publish_comment_event(
+        self,
+        event_type: str,
+        comment_id: str,
+        post_id: str,
+        user_id: str | None = None,
+    ) -> None:
+        if self._producer is None:
+            logger.warning(
+                "Skip publish %s: producer not started",
+                settings.KAFKA_TOPIC_COMMENTS,
+            )
+            return
+
+        payload: dict = {
+            "type": event_type,
+            "post_id": post_id,
+            "comment_id": comment_id,
+        }
+        if user_id is not None:
+            payload["user_id"] = user_id
+
+        await self._producer.send_and_wait(
+            settings.KAFKA_TOPIC_COMMENTS,
+            payload,
+            key=comment_id.encode("utf-8"),
+        )
+        logger.info(
+            "Published %s on %s for post %s",
+            event_type,
+            settings.KAFKA_TOPIC_COMMENTS,
+            post_id,
+        )
+
+    async def send_comment_created(
+        self, comment_id: str, post_id: str, user_id: str
+    ) -> None:
+        await self._publish_comment_event(
+            "comment.created", comment_id, post_id, user_id
+        )
+
+    async def send_comment_deleted(self, comment_id: str, post_id: str) -> None:
+        await self._publish_comment_event(
+            "comment.deleted", comment_id, post_id
+        )

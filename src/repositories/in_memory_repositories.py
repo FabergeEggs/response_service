@@ -103,5 +103,5 @@ class InMemoryCommentRepository(CommentRepository):
     async def delete_comment(self, comment_id: UUID) -> bool:
         return self._comments.pop(comment_id, None) is not None
 
-    async def get_comments_for_response(self, response_id: UUID) -> List[Comment]:
-        return [c for c in self._comments.values() if c.response_id == response_id]
+    async def get_comments_for_post(self, post_id: UUID) -> List[Comment]:
+        return [c for c in self._comments.values() if c.post_id == post_id]

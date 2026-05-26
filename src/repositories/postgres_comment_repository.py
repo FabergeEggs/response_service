@@ -8,10 +8,17 @@ from src.models.comment import Comment
 from src.repositories.comment_repository import CommentRepository
 
 
+def _utc_naive(dt: datetime | None = None) -> datetime:
+    value = dt or datetime.now(UTC)
+    if value.tzinfo is not None:
+        return value.astimezone(UTC).replace(tzinfo=None)
+    return value
+
+
 def _to_model(row: asyncpg.Record) -> Comment:
     return Comment(
         id=row["id"],
-        response_id=row["post_id"],
+        post_id=row["post_id"],
         user_id=row["user_id"],
         content=row["text"],
         created_at=row["created_at"],
@@ -25,7 +32,8 @@ class PostgresCommentRepository(CommentRepository):
 
     async def add_comment(self, comment: Comment) -> Comment:
         comment_id = comment.id or uuid4()
-        now = datetime.now(UTC)
+        created_at = _utc_naive(comment.created_at)
+        updated_at = _utc_naive(comment.updated_at)
         query = """
         INSERT INTO comments (id, user_id, post_id, text, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -35,10 +43,10 @@ class PostgresCommentRepository(CommentRepository):
                 query,
                 comment_id,
                 comment.user_id,
-                comment.response_id,
+                comment.post_id,
                 comment.content,
-                comment.created_at or now,
-                comment.updated_at or now,
+                created_at,
+                updated_at,
             )
         return comment.model_copy(update={"id": comment_id})
 
@@ -58,7 +66,7 @@ class PostgresCommentRepository(CommentRepository):
             result = await conn.execute(query, comment_id)
         return result.endswith("1")
 
-    async def get_comments_for_response(self, response_id: UUID) -> List[Comment]:
+    async def get_comments_for_post(self, post_id: UUID) -> List[Comment]:
         query = """
         SELECT id, user_id, post_id, text, created_at, updated_at
         FROM comments
@@ -66,5 +74,5 @@ class PostgresCommentRepository(CommentRepository):
         ORDER BY created_at DESC
         """
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(query, response_id)
+            rows = await conn.fetch(query, post_id)
         return [_to_model(row) for row in rows]

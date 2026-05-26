@@ -77,20 +77,20 @@ async def change_response_status(
         raise HTTPException(status_code=404, detail="Response not found")
     return updated
 
-@router.post("/responses/{response_id}/comments", response_model=Comment, status_code=201)
+@router.post("/posts/{post_id}/comments", response_model=Comment, status_code=201)
 async def add_comment(
-    response_id: UUID,
+    post_id: UUID,
     data: CreateCommentRequest,
     service: CommentService = Depends(get_comment_service)
 ):
     comment = Comment(
-        response_id=response_id,
+        post_id=post_id,
         user_id=data.user_id,
         content=data.text
     )
-    created = await service.add_comment(response_id, comment)
+    created = await service.add_comment(post_id, comment)
     if not created:
-        raise HTTPException(status_code=404, detail="Response not found")
+        raise HTTPException(status_code=404, detail="Post not found")
     return created
 
 @router.get("/comments/{comment_id}", response_model=Comment)
@@ -113,14 +113,14 @@ async def delete_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
     return None
 
-@router.get("/responses/{response_id}/comments", response_model=List[Comment])
-async def get_response_comments(
-    response_id: UUID,
+@router.get("/posts/{post_id}/comments", response_model=List[Comment])
+async def get_post_comments(
+    post_id: UUID,
     service: CommentService = Depends(get_comment_service)
 ):
-    comments = await service.get_response_comments(response_id)
+    comments = await service.get_post_comments(post_id)
     if comments is None:
-        raise HTTPException(status_code=404, detail="Response not found")
+        raise HTTPException(status_code=404, detail="Post not found")
     return comments
 
 @router.post("/responses/{response_id}/files", response_model=UUID, status_code=201)

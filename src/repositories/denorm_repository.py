@@ -41,3 +41,11 @@ class DenormRepository(ABC):
     @abstractmethod
     async def delete_task(self, task_id: UUID) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def post_exists(self, post_id: UUID) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_post(self, post_id: UUID) -> None:
+        raise NotImplementedError

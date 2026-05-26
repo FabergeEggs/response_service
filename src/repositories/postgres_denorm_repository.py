@@ -88,3 +88,14 @@ class PostgresDenormRepository(DenormRepository):
         query = "DELETE FROM denormalized_task WHERE id = $1"
         async with self._pool.acquire() as conn:
             await conn.execute(query, task_id)
+
+    async def post_exists(self, post_id: UUID) -> bool:
+        query = "SELECT 1 FROM denormalized_post WHERE id = $1"
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(query, post_id)
+        return row is not None
+
+    async def delete_post(self, post_id: UUID) -> None:
+        query = "DELETE FROM denormalized_post WHERE id = $1"
+        async with self._pool.acquire() as conn:
+            await conn.execute(query, post_id)

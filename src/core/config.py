@@ -2,7 +2,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from typing import List
 
-from src.kafka_topics import ANSWERS, INCOMING_TOPICS, RESPONSE_ADD, RESPONSE_DELETE
+from src.kafka_topics import (
+    ANSWERS,
+    COMMENTS,
+    INCOMING_TOPICS,
+    RESPONSE_ADD,
+    RESPONSE_DELETE,
+)
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -29,6 +35,10 @@ class Settings(BaseSettings):
     KAFKA_TOPIC_ANSWERS: str = Field(
         default=ANSWERS,
         description="Topic for project_service answer counters",
+    )
+    KAFKA_TOPIC_COMMENTS: str = Field(
+        default=COMMENTS,
+        description="Topic for project_service post comment counters",
     )
 
     # Media Service

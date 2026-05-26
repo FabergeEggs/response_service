@@ -31,3 +31,6 @@ RESPONSE_DELETE = "response_service.response.delete"
 
 # Outbound — consumed by project_service (answer counters)
 ANSWERS = "project-answers"
+
+# Outbound — consumed by project_service (post comments_count)
+COMMENTS = "project-comments"

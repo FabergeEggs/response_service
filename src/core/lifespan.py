@@ -58,7 +58,9 @@ async def lifespan(app: FastAPI):
     await kafka_consumer.start()
 
     response_service = ResponseService(response_repo, kafka_producer, denorm_repo)
-    comment_service = CommentService(comment_repo, response_repo, denorm_repo)
+    comment_service = CommentService(
+        comment_repo, denorm_repo, kafka_producer
+    )
 
     # Запуск фонового consumer loop
     consumer_task = asyncio.create_task(kafka_consumer.consume_loop())

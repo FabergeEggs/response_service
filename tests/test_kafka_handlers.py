@@ -13,7 +13,9 @@ class InMemoryDenormRepository:
         self.users: set = set()
         self.user_names: dict = {}
         self.tasks: dict = {}
+        self.posts: set = set()
         self.deleted_tasks: list = []
+        self.deleted_posts: list = []
 
     async def upsert_user(self, user_id, name="") -> None:
         self.users.add(user_id)
@@ -24,7 +26,7 @@ class InMemoryDenormRepository:
         self.tasks[task_id] = project_status
 
     async def upsert_post(self, post_id, project_id=None, project_status="ACTIVE") -> None:
-        pass
+        self.posts.add(post_id)
 
     async def update_user(self, user_id, name=None) -> None:
         if name:
@@ -38,6 +40,13 @@ class InMemoryDenormRepository:
 
     async def delete_task(self, task_id) -> None:
         self.deleted_tasks.append(task_id)
+
+    async def post_exists(self, post_id) -> bool:
+        return post_id in self.posts
+
+    async def delete_post(self, post_id) -> None:
+        self.posts.discard(post_id)
+        self.deleted_posts.append(post_id)
 
 
 @pytest.mark.asyncio
@@ -214,6 +223,13 @@ async def test_post_changed_calls_upsert() -> None:
 
 
 @pytest.mark.asyncio
-async def test_post_deleted_is_noop() -> None:
-    handler = KafkaEventHandler(AsyncMock(), InMemoryDenormRepository())
-    await handler.delete_post({"post_id": str(uuid4())})
+async def test_post_deleted_removes_denorm_post() -> None:
+    denorm = InMemoryDenormRepository()
+    post_id = uuid4()
+    await denorm.upsert_post(post_id)
+    handler = KafkaEventHandler(AsyncMock(), denorm)
+
+    await handler.delete_post({"post_id": str(post_id)})
+
+    assert post_id in denorm.deleted_posts
+    assert not await denorm.post_exists(post_id)

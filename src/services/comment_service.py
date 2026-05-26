@@ -5,7 +5,7 @@ from typing import List, Optional
 from src.models.comment import Comment
 from src.repositories.comment_repository import CommentRepository
 from src.repositories.denorm_repository import DenormRepository
-from src.repositories.response_repository import ResponseRepository
+from src.services.kafka_producer import KafkaProducerService
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +14,15 @@ class CommentService:
     def __init__(
         self,
         comment_repo: CommentRepository,
-        response_repo: ResponseRepository,
-        denorm_repo: DenormRepository | None = None,
+        denorm_repo: DenormRepository,
+        kafka_producer: KafkaProducerService | None = None,
     ) -> None:
         self._comment_repo = comment_repo
-        self._response_repo = response_repo
         self._denorm_repo = denorm_repo
+        self._kafka_producer = kafka_producer
 
     async def _attach_user_names(self, comments: List[Comment]) -> List[Comment]:
-        if not comments or self._denorm_repo is None:
+        if not comments:
             return comments
         user_ids = list({comment.user_id for comment in comments})
         names = await self._denorm_repo.get_user_names(user_ids)
@@ -33,20 +33,24 @@ class CommentService:
             for comment in comments
         ]
 
-    async def add_comment(self, response_id: UUID, comment: Comment) -> Optional[Comment]:
-        response = await self._response_repo.get_response(response_id)
-        if not response:
+    async def add_comment(self, post_id: UUID, comment: Comment) -> Optional[Comment]:
+        if not await self._denorm_repo.post_exists(post_id):
             logger.warning(
-                "Attempt to add comment to non-existent response %s", response_id
+                "Attempt to add comment to non-existent post %s", post_id
             )
             return None
 
-        comment = comment.model_copy(update={"response_id": response_id})
-        if self._denorm_repo is not None:
-            await self._denorm_repo.upsert_user(comment.user_id)
+        comment = comment.model_copy(update={"post_id": post_id})
+        await self._denorm_repo.upsert_user(comment.user_id)
 
         created = await self._comment_repo.add_comment(comment)
-        logger.info("Comment %s added to response %s", created.id, response_id)
+        logger.info("Comment %s added to post %s", created.id, post_id)
+
+        if self._kafka_producer is not None and created.id is not None:
+            await self._kafka_producer.send_comment_created(
+                str(created.id), str(post_id), str(comment.user_id)
+            )
+
         enriched = await self._attach_user_names([created])
         return enriched[0]
 
@@ -58,22 +62,28 @@ class CommentService:
         return enriched[0]
 
     async def delete_comment(self, comment_id: UUID) -> bool:
-        deleted = await self._comment_repo.delete_comment(comment_id)
-        if deleted:
-            logger.info("Comment %s deleted", comment_id)
-        else:
+        comment = await self._comment_repo.get_comment(comment_id)
+        if comment is None:
             logger.warning("Comment %s not found for deletion", comment_id)
-        return deleted
+            return False
 
-    async def get_response_comments(
-        self, response_id: UUID
-    ) -> Optional[List[Comment]]:
-        response = await self._response_repo.get_response(response_id)
-        if not response:
+        deleted = await self._comment_repo.delete_comment(comment_id)
+        if not deleted:
+            return False
+
+        logger.info("Comment %s deleted", comment_id)
+        if self._kafka_producer is not None:
+            await self._kafka_producer.send_comment_deleted(
+                str(comment_id), str(comment.post_id)
+            )
+        return True
+
+    async def get_post_comments(self, post_id: UUID) -> Optional[List[Comment]]:
+        if not await self._denorm_repo.post_exists(post_id):
             logger.warning(
-                "Attempt to get comments for non-existent response %s", response_id
+                "Attempt to get comments for non-existent post %s", post_id
             )
             return None
 
-        comments = await self._comment_repo.get_comments_for_response(response_id)
+        comments = await self._comment_repo.get_comments_for_post(post_id)
         return await self._attach_user_names(comments)

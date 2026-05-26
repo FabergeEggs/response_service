@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 class Comment(BaseModel):
     id: Optional[UUID] = None
-    response_id: UUID
+    post_id: UUID
     user_id: UUID
     user_name: str = ""
     content: str

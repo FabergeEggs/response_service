@@ -17,8 +17,8 @@ curl http://localhost:8000/health
 | GET | `/response/responses?task_id=` | Список откликов + **`user_name`** |
 | GET | `/response/responses/{id}` | Один отклик |
 | POST | `/response/responses` | Создать отклик |
-| GET | `/response/responses/{id}/comments` | Комментарии + **`user_name`** |
-| POST | `/response/responses/{id}/comments` | Добавить комментарий |
+| GET | `/response/posts/{id}/comments` | Комментарии к посту + **`user_name`** |
+| POST | `/response/posts/{id}/comments` | Добавить комментарий к посту |
 | PATCH | `/response/responses/{id}/status` | Смена статуса |
 
 ## Kafka
@@ -29,6 +29,7 @@ curl http://localhost:8000/health
 | In | `project_service.task.*`, `project_service.post.*` |
 | Out | `response_service.response.add`, `response_service.response.delete` |
 | Out | `project-answers` (`answer.created` / `answer.deleted`) |
+| Out | `project-comments` (`comment.created` / `comment.deleted`) |
 
 Константы: `src/kafka_topics.py`.
 

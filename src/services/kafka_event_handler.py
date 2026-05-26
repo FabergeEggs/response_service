@@ -165,4 +165,5 @@ class KafkaEventHandler:
         if post_id is None:
             logger.warning("post.deleted without post_id: %s", payload)
             return
-        logger.info("Ignored post.deleted for post %s (no local state)", post_id)
+        await self._denorm_repo.delete_post(post_id)
+        logger.info("Deleted denormalized post %s and its comments", post_id)

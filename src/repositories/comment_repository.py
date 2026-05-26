@@ -19,5 +19,5 @@ class CommentRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_comments_for_response(self, response_id: UUID) -> List[Comment]:
+    async def get_comments_for_post(self, post_id: UUID) -> List[Comment]:
         raise NotImplementedError

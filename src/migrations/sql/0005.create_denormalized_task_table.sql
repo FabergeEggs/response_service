@@ -1,5 +1,4 @@
-CREATE TYPE project_status AS ENUM('ACTIVE', 'FINISHED', 'DELETED');
-
+-- depends: 0004.create_denormalized_post_table
 CREATE TABLE IF NOT EXISTS
     denormalized_task (
         id UUID PRIMARY KEY,
