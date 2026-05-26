@@ -11,6 +11,10 @@ dependencies = [
     "psycopg-pool>=3.3.1",
     "psycopg2-binary>=2.9.12",
     "yoyo-migrations>=9.0.0",
+    "uvicorn>=0.48.0",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.14.1",
+    "python-multipart>=0.0.29",
 ]
 
 [project.scripts]

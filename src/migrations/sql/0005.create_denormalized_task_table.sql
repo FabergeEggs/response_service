@@ -1,4 +1,8 @@
-CREATE TYPE project_status AS ENUM('ACTIVE', 'FINISHED', 'DELETED');
+DO $$ BEGIN CREATE TYPE project_status AS ENUM('ACTIVE', 'FINISHED', 'DELETED');
+
+EXCEPTION WHEN duplicate_object THEN NULL;
+
+END $$;
 
 CREATE TABLE IF NOT EXISTS
     denormalized_task (
