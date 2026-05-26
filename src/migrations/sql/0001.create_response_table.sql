@@ -1,6 +1,10 @@
 -- depends: 0003.create_denormalized_user_table
 -- depends: 0005.create_denormalized_task_table
-CREATE TYPE response_status AS ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED');
+DO $$ BEGIN
+    CREATE TYPE response_status AS ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS
     response (
