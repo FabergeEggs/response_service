@@ -118,7 +118,10 @@ async def get_response_comments(
     response_id: UUID,
     service: CommentService = Depends(get_comment_service)
 ):
-    return await service.get_response_comments(response_id)
+    comments = await service.get_response_comments(response_id)
+    if comments is None:
+        raise HTTPException(status_code=404, detail="Response not found")
+    return comments
 
 @router.post("/responses/{response_id}/files", response_model=UUID, status_code=201)
 async def add_attached_file(

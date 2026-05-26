@@ -1,0 +1,1 @@
+ALTER TABLE denormalized_user ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255) NOT NULL DEFAULT '';

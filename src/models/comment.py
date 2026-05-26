@@ -1,14 +1,16 @@
-from pydantic import BaseModel
+from datetime import UTC, datetime
 from typing import Optional
-from datetime import datetime
 from uuid import UUID
 
+from pydantic import BaseModel, Field
+
 class Comment(BaseModel):
-    id: Optional[int] = None
+    id: Optional[UUID] = None
     response_id: UUID
     user_id: UUID
+    user_name: str = ""
     content: str
-    created_at: Optional[datetime] = datetime.now()
-    updated_at: Optional[datetime] = datetime.now()
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 
 
