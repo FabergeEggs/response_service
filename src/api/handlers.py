@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import Response as FastAPIResponse  
+from fastapi.responses import Response as FastAPIResponse
 from uuid import UUID
 from typing import List
 from src.api.dto import (
-    CreateResponseRequest, UpdateResponseRequest, ChangeStatusRequest,
+    CreateResponseRequest, CreateResponseForTaskRequest,
+    UpdateResponseRequest, ChangeStatusRequest,
     CreateCommentRequest
 )
 from src.models.response import Response  # ← модель данных
@@ -11,7 +12,10 @@ from src.models.comment import Comment
 from src.services.response_service import ResponseService
 from src.services.comment_service import CommentService
 from src.services.media_client import MediaServiceClient
-from src.api.dependencies import get_response_service, get_comment_service, get_media_client
+from src.api.dependencies import (
+    get_response_service, get_comment_service, get_media_client,
+    get_current_user_id,
+)
 
 router = APIRouter()
 
@@ -35,11 +39,32 @@ async def get_response(
 @router.post("/responses", response_model=Response, status_code=201)
 async def add_response(
     data: CreateResponseRequest,
+    user_id: UUID = Depends(get_current_user_id),
     service: ResponseService = Depends(get_response_service)
 ):
     new_response = Response(
         task_id=data.task_id,
-        user_id=data.user_id,
+        user_id=user_id,  # from X-User-Id header, not from body
+        text=data.text,
+        attached_files=data.attached_files or []
+    )
+    return await service.add_response(new_response)
+
+@router.post("/tasks/{task_id}/responses", response_model=Response, status_code=201)
+async def add_response_for_task(
+    task_id: UUID,
+    data: CreateResponseForTaskRequest,
+    user_id: UUID = Depends(get_current_user_id),
+    service: ResponseService = Depends(get_response_service)
+):
+    """Path-based endpoint for KrakenD routing from /project/{pid}/task/{tid}/responses.
+
+    task_id comes from the URL path (injected by KrakenD from the upstream route),
+    user_id comes from X-User-Id header (injected by KrakenD from JWT sub claim).
+    """
+    new_response = Response(
+        task_id=task_id,  # from path param
+        user_id=user_id,  # from X-User-Id header
         text=data.text,
         attached_files=data.attached_files or []
     )
@@ -81,11 +106,12 @@ async def change_response_status(
 async def add_comment(
     post_id: UUID,
     data: CreateCommentRequest,
+    user_id: UUID = Depends(get_current_user_id),
     service: CommentService = Depends(get_comment_service)
 ):
     comment = Comment(
         post_id=post_id,
-        user_id=data.user_id,
+        user_id=user_id,  # from X-User-Id header, not from body
         content=data.text
     )
     created = await service.add_comment(post_id, comment)
@@ -158,7 +184,6 @@ async def get_attached_file(
         raise HTTPException(status_code=404, detail="File not found in this response")
 
     content = await media_client.get_attached_file(file_id)
-    # Используем FastAPIResponse, а не модель Response
     return FastAPIResponse(content=content, media_type="application/octet-stream")
 
 @router.delete("/responses/{response_id}/files/{file_id}", status_code=204)
@@ -177,6 +202,5 @@ async def delete_attached_file(
     new_files = [fid for fid in resp.attached_files if fid != file_id]
     updated = await response_service.change_response(response_id, {"attached_files": new_files})
     if not updated:
-        # В идеале здесь тоже нужен откат, но для простоты логируем
         raise HTTPException(status_code=500, detail="Failed to update response after file deletion")
     return None

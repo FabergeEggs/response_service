@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -28,7 +28,7 @@ class InMemoryResponseRepository(ResponseRepository):
         current = self._responses.get(response_id)
         if not current:
             return None
-        updated = current.model_copy(update={**update_data, "updated_at": datetime.now(UTC)})
+        updated = current.model_copy(update={**update_data, "updated_at": datetime.utcnow()})
         self._responses[response_id] = updated
         return updated
 
@@ -48,7 +48,7 @@ class InMemoryResponseRepository(ResponseRepository):
         if file_id not in files:
             files.append(file_id)
         updated = response.model_copy(
-            update={"attached_files": files, "updated_at": datetime.now(UTC)}
+            update={"attached_files": files, "updated_at": datetime.utcnow()}
         )
         self._responses[response_id] = updated
         return True
@@ -59,7 +59,7 @@ class InMemoryResponseRepository(ResponseRepository):
             return False
         files = [fid for fid in response.attached_files if fid != file_id]
         updated = response.model_copy(
-            update={"attached_files": files, "updated_at": datetime.now(UTC)}
+            update={"attached_files": files, "updated_at": datetime.utcnow()}
         )
         self._responses[response_id] = updated
         return True
@@ -77,7 +77,7 @@ class InMemoryResponseRepository(ResponseRepository):
                 self._responses[rid] = response.model_copy(
                     update={
                         "status": ResponseStatus.CANCELLED,
-                        "updated_at": datetime.now(UTC),
+                        "updated_at": datetime.utcnow(),
                     }
                 )
                 count += 1

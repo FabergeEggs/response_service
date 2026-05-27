@@ -2,17 +2,24 @@
 
 from typing import List
 
-# Inbound — from profile_service / auth_service
-PROFILE_CHANGED = "profile_service.profile.changed"
-USER_REGISTERED = "profile_service.user.registered"
+# Inbound — from auth_service (user registration)
+# auth_service publishes to "user.created" with payload: {data: {user_id, email, first_name, last_name}}
+USER_REGISTERED = "user.created"
+
+# Inbound — from profile_service (profile / avatar updates)
+# profile_service publishes to "user-events" with event_type:
+#   "user.profile.updated" → {user_id, name}
+#   "user.avatar.updated"  → {user_id, avatar_link}  (ignored by response_service)
+#   "user.email.updated"   → {user_id, email}         (ignored by response_service)
+PROFILE_CHANGED = "user-events"
 
 # Inbound — from project_service
-TASK_CREATED = "project_service.task.created"
-TASK_CHANGED = "project_service.task.changed"
-TASK_DELETE = "project_service.task.delete"
-POST_CREATED = "project_service.post.created"
-POST_CHANGED = "project_service.post.changed"
-POST_DELETE = "project_service.post.delete"
+TASK_CREATED = "task.created"
+TASK_CHANGED = "task.updated"
+TASK_DELETE = "task.deleted"
+POST_CREATED = "post.created"
+POST_CHANGED = "post.updated"
+POST_DELETE = "post.deleted"
 
 INCOMING_TOPICS: List[str] = [
     USER_REGISTERED,

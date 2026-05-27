@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 from typing import List
 from uuid import UUID, uuid4
@@ -21,5 +21,7 @@ class Response(BaseModel):
     text: str
     status: ResponseStatus = ResponseStatus.PENDING
     attached_files: List[UUID] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    # Use naive UTC datetimes — DB columns are TIMESTAMP WITHOUT TIME ZONE.
+    # asyncpg rejects timezone-aware datetimes for non-tz columns.
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

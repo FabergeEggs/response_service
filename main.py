@@ -1,8 +1,11 @@
+import logging
 from fastapi import FastAPI
 import uvicorn
 from src.api.handlers import router
 from src.core.config import settings
 from src.core.lifespan import lifespan
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Response Service",

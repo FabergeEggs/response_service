@@ -99,3 +99,9 @@ class PostgresDenormRepository(DenormRepository):
         query = "DELETE FROM denormalized_post WHERE id = $1"
         async with self._pool.acquire() as conn:
             await conn.execute(query, post_id)
+
+    async def get_task_project_id(self, task_id: UUID) -> Optional[UUID]:
+        query = "SELECT project_id FROM denormalized_task WHERE id = $1"
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(query, task_id)
+        return row["project_id"] if row else None

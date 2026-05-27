@@ -39,7 +39,9 @@ class KafkaConsumerService:
         handler = self._event_handler
         return {
             USER_REGISTERED: handler.register_user,
-            PROFILE_CHANGED: handler.change_user,
+            # user-events is multiplexed (profile.updated, avatar.updated, etc.)
+            # handle_user_event dispatches by event_type internally
+            PROFILE_CHANGED: handler.handle_user_event,
             TASK_CREATED: handler.create_task,
             TASK_CHANGED: handler.change_task,
             TASK_DELETE: handler.delete_task,

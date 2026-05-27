@@ -80,19 +80,38 @@ class KafkaEventHandler:
         await self._denorm_repo.upsert_user(user_id, name=name)
         logger.info("Registered denormalized user %s", user_id)
 
+    async def handle_user_event(self, payload: Dict[str, Any]) -> None:
+        """Dispatcher for the multiplexed 'user-events' Kafka topic.
+
+        profile_service publishes multiple event_types on this single topic:
+        - "user.profile.updated" → update name in denorm cache
+        - "user.avatar.updated"  → ignored (response_service doesn't use avatars)
+        - "user.email.updated"   → ignored
+        """
+        event_type = payload.get("event_type", "")
+        if event_type == "user.profile.updated":
+            await self.change_user(payload)
+        else:
+            logger.debug("Ignoring user-event type=%s", event_type)
+
     async def change_user(self, payload: Dict[str, Any]) -> None:
         user_id = _extract_user_id(payload)
         if user_id is None:
             logger.warning("profile.changed without user_id: %s", payload)
             return
 
-        changes = payload.get("changes", {})
-        if not isinstance(changes, dict):
-            changes = payload.get("data", {})
-            if isinstance(changes, dict):
-                changes = changes.get("changes", {})
-
-        name = changes.get("name") if isinstance(changes, dict) else None
+        # profile_service "user.profile.updated" sends {user_id, name} directly.
+        # Older / legacy format uses {changes: {name: ...}} or {data: {changes: {name: ...}}}.
+        name: Optional[str] = None
+        if "name" in payload:
+            name = str(payload["name"]).strip() or None
+        else:
+            changes = payload.get("changes", {})
+            if not isinstance(changes, dict):
+                changes = payload.get("data", {})
+                if isinstance(changes, dict):
+                    changes = changes.get("changes", {})
+            name = changes.get("name") if isinstance(changes, dict) else None
 
         await self._denorm_repo.upsert_user(user_id)
         await self._denorm_repo.update_user(user_id, name=name)

@@ -54,8 +54,19 @@ class ResponseService:
             "Response %s created for task %s by user %s",
             created.id, created.task_id, created.user_id,
         )
+        # Look up project_id from denormalized_task so feed_service can do
+        # project-scoped feed filtering. Gracefully degrades to "" if not found.
+        project_id = ""
+        if self._denorm_repo is not None:
+            try:
+                pid = await self._denorm_repo.get_task_project_id(created.task_id)
+                project_id = str(pid) if pid is not None else ""
+            except Exception as exc:
+                logger.warning("Failed to look up project_id for task %s: %s", created.task_id, exc)
+
         await self._kafka.send_response_add(
-            str(created.id), str(created.task_id), str(created.user_id)
+            str(created.id), str(created.task_id), str(created.user_id),
+            project_id=project_id,
         )
         return created
 

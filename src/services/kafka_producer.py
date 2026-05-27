@@ -74,7 +74,9 @@ class KafkaProducerService:
             response_id,
         )
 
-    async def send_response_add(self, response_id: str, task_id: str, user_id: str) -> None:
+    async def send_response_add(
+        self, response_id: str, task_id: str, user_id: str, project_id: str = ""
+    ) -> None:
         if self._producer is None:
             logger.warning(
                 "Skip publish %s: producer not started",
@@ -86,6 +88,9 @@ class KafkaProducerService:
             "response_id": response_id,
             "task_id": task_id,
             "user_id": user_id,
+            # project_id allows feed_service to filter responses into project-scoped feeds.
+            # Empty string when denormalized_task lookup fails (graceful degradation).
+            "project_id": project_id,
         }
         await self._producer.send_and_wait(
             settings.KAFKA_TOPIC_RESPONSE_ADD,

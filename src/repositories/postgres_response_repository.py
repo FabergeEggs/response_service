@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -75,7 +75,7 @@ class PostgresResponseRepository(ResponseRepository):
         current = await self.get_response(response_id)
         if not current:
             return None
-        patched = current.model_copy(update={**update_data, "updated_at": datetime.now(UTC)})
+        patched = current.model_copy(update={**update_data, "updated_at": datetime.utcnow()})
         query = """
         UPDATE response
         SET text = $2, status = $3::response_status, files = $4::text[], updated_at = $5

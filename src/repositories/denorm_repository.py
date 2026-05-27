@@ -49,3 +49,8 @@ class DenormRepository(ABC):
     @abstractmethod
     async def delete_post(self, post_id: UUID) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_task_project_id(self, task_id: UUID) -> Optional[UUID]:
+        """Return the project_id for a denormalized task, or None if not found."""
+        raise NotImplementedError
