@@ -34,11 +34,11 @@ class CommentService:
         ]
 
     async def add_comment(self, post_id: UUID, comment: Comment) -> Optional[Comment]:
+        # Lazy-register post if Kafka post.created was missed (e.g. service was down).
+        # post_id is validated by the caller navigating to a real post page.
         if not await self._denorm_repo.post_exists(post_id):
-            logger.warning(
-                "Attempt to add comment to non-existent post %s", post_id
-            )
-            return None
+            logger.info("Post %s not in denorm, registering lazily", post_id)
+            await self._denorm_repo.upsert_post(post_id, None)
 
         comment = comment.model_copy(update={"post_id": post_id})
         await self._denorm_repo.upsert_user(comment.user_id)
@@ -78,12 +78,10 @@ class CommentService:
             )
         return True
 
-    async def get_post_comments(self, post_id: UUID) -> Optional[List[Comment]]:
+    async def get_post_comments(self, post_id: UUID) -> List[Comment]:
         if not await self._denorm_repo.post_exists(post_id):
-            logger.warning(
-                "Attempt to get comments for non-existent post %s", post_id
-            )
-            return None
+            logger.info("Post %s not in denorm, returning empty comments", post_id)
+            return []
 
         comments = await self._comment_repo.get_comments_for_post(post_id)
         return await self._attach_user_names(comments)
