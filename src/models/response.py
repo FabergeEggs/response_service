@@ -20,7 +20,7 @@ class Response(BaseModel):
     user_name: str = ""
     text: str
     status: ResponseStatus = ResponseStatus.PENDING
-    attached_files: List[UUID] = Field(default_factory=list)
+    attached_files: List[str] = Field(default_factory=list)
     # Use naive UTC datetimes — DB columns are TIMESTAMP WITHOUT TIME ZONE.
     # asyncpg rejects timezone-aware datetimes for non-tz columns.
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -7,7 +7,7 @@ class CreateResponseRequest(BaseModel):
     task_id: UUID
     # user_id is injected from X-User-Id header by the API gateway (not from request body)
     text: str
-    attached_files: Optional[List[UUID]] = []
+    attached_files: Optional[List[str]] = []
 
 class CreateResponseForTaskRequest(BaseModel):
     """Used by path-based endpoint POST /tasks/{task_id}/responses.
@@ -15,12 +15,12 @@ class CreateResponseForTaskRequest(BaseModel):
     user_id comes from X-User-Id header injected by the API gateway.
     """
     text: str
-    attached_files: Optional[List[UUID]] = []
+    attached_files: Optional[List[str]] = []
 
 class UpdateResponseRequest(BaseModel):
     text: Optional[str] = None
     status: Optional[ResponseStatus] = None
-    attached_files: Optional[List[UUID]] = None
+    attached_files: Optional[List[str]] = None
 
 class ChangeStatusRequest(BaseModel):
     status: ResponseStatus

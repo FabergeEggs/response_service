@@ -9,8 +9,7 @@ from src.repositories.response_repository import ResponseRepository
 
 
 def _to_model(row: asyncpg.Record) -> Response:
-    files = row["files"] or []
-    attached_files = [UUID(file_id) if isinstance(file_id, str) else file_id for file_id in files]
+    files: list[str] = list(row["files"] or [])
     status_raw = row["status"]
     status = ResponseStatus(status_raw.lower()) if isinstance(status_raw, str) else status_raw
     return Response(
@@ -19,7 +18,7 @@ def _to_model(row: asyncpg.Record) -> Response:
         user_id=row["user_id"],
         text=row["text"],
         status=status,
-        attached_files=attached_files,
+        attached_files=files,
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
