@@ -21,7 +21,7 @@ def _decode_jwt_payload(token: str) -> dict:
             return {}
         payload_b64 = parts[1]
         # Restore base64 padding
-        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        payload_b64 += "=" * ((-len(payload_b64)) % 4)
         return json.loads(base64.urlsafe_b64decode(payload_b64))
     except Exception as exc:
         logger.debug("JWT payload decode failed: %s", exc)
